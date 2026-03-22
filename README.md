@@ -1,363 +1,861 @@
-PERSONALIZED NEWS FEED RANKING SYSTEM
-====================================
+# Personalized News Feed Ranking System
+
+A production-inspired, end-to-end personalized news feed ranking system built with a local-first stack. The project ingests real public content, logs user interactions, engineers user/item/context features, trains a baseline click-prediction ranker, applies multi-objective reranking, and serves a personalized feed through a FastAPI backend and Streamlit frontend.
 
-1. PROJECT OVERVIEW
--------------------
+---
 
-This project implements a production-inspired personalized news feed ranking system.
+## Table of Contents
 
-It simulates how modern platforms (news apps, social feeds) rank content using:
+1. Project Overview  
+2. Why This Project Matters  
+3. What the System Does  
+4. Key Capabilities  
+5. System Architecture  
+6. Repository Structure  
+7. Data Sources  
+8. Data Model and Storage Layers  
+9. Event Logging Design  
+10. Feature Engineering  
+11. Training Dataset Construction  
+12. Modeling Approach  
+13. Multi-Objective Re-Ranking  
+14. Serving Architecture  
+15. Streamlit Demo UI  
+16. How to Run the Project  
+17. Example End-to-End Workflow  
+18. Current Results  
+19. Design Decisions and Tradeoffs  
+20. Limitations  
+21. Future Improvements  
+22. Resume / Portfolio Positioning  
+23. Interview Talking Points  
+24. License / Usage Notes
 
-- real content ingestion
-- event logging
-- feature engineering
-- machine learning ranking
-- multi-objective reranking
-- API-based serving
-- interactive UI
+---
+
+## 1) Project Overview
+
+This repository implements a lightweight but realistic personalized feed ranking system inspired by the architecture of modern content platforms such as news apps, recommendation surfaces, and social feeds.
+
+Instead of building only a notebook or a single ML model, this project focuses on the full ranking loop:
+
+- ingesting real content from public sources
+- storing normalized content in an analytical store
+- showing ranked feed items to a user
+- logging impressions and downstream actions
+- constructing user, item, and context features
+- training a baseline ranking model
+- reranking results for freshness and diversity
+- serving ranked results through an API
+- exposing the system through a usable demo UI
+
+The result is a portfolio-grade project that demonstrates machine learning, data engineering, product thinking, and ML systems design together.
+
+---
+
+## 2) Why This Project Matters
+
+Many portfolio projects stop at a classification notebook or dashboard. That is useful, but it does not fully demonstrate how recommendation and ranking systems work in practice.
+
+This project is intentionally designed to be stronger than a standard student project because it shows:
+
+- **ranking instead of only classification**
+- **event logging and implicit-feedback data collection**
+- **feature engineering across user, item, and context dimensions**
+- **separation of training logic and serving logic**
+- **product-aware feed design beyond pure CTR optimization**
+- **realistic engineering tradeoffs using a local-first, low-cost stack**
+
+It is especially relevant for applications in:
+
+- Data Science
+- Machine Learning Engineering
+- Applied ML
+- Recommender Systems
+- Data Engineering / ML Systems
+- Analytics engineering-adjacent roles
+
+---
+
+## 3) What the System Does
+
+At a high level, the system answers the question:
+
+**“Which items should this user see right now, and in what order?”**
+
+To answer that, it performs the following steps:
+
+1. Ingest recent articles/posts from public sources such as Hacker News and RSS feeds.
+2. Normalize and store content in DuckDB.
+3. Show feed items to the user in a Streamlit interface.
+4. Log feed requests, impressions, clicks, saves, and hides.
+5. Build feature tables for items, users, and request context.
+6. Construct a training dataset from impression/click logs.
+7. Train a baseline click-prediction model.
+8. Score candidate items for a given user.
+9. Apply reranking for freshness and reduced repetition.
+10. Return a ranked feed through FastAPI.
+
+---
+
+## 4) Key Capabilities
+
+### Implemented in the current MVP
+
+- Real content ingestion from public sources
+- Unified content schema
+- DuckDB + Parquet storage
+- Streamlit feed UI
+- Event logging for feed interactions
+- Feature engineering pipelines
+- Impression-based training dataset
+- Baseline Logistic Regression ranking model
+- FastAPI ranking endpoint
+- Multi-objective reranking with freshness and repetition penalties
+- UI integration with API-based scoring
+
+### Planned or partially scaffolded for later versions
+
+- LightGBM / XGBoost comparison
+- sentence-transformer embeddings
+- Redis online feature materialization
+- stricter point-in-time joins
+- off-policy / counterfactual evaluation
+- simulator-assisted data generation
+
+---
+
+## 5) System Architecture
+
+### High-level flow
+
+```text
+Public content sources
+(Hacker News API, RSS feeds)
+        |
+        v
+Ingestion + normalization scripts
+        |
+        v
+DuckDB + Parquet storage
+(content_items, events, feature tables)
+        |
+        +-----------------------------+
+        |                             |
+        v                             v
+Feature engineering pipelines      Streamlit UI
+(item/user/context features)          |
+        |                             |
+        v                             |
+Training dataset construction         |
+        |                             |
+        v                             |
+Baseline ranking model training       |
+        |                             |
+        v                             |
+Saved model artifact                  |
+        |                             |
+        +------------> FastAPI ranking service <---+
+                             |                     |
+                             v                     |
+                    Candidate generation           |
+                             |                     |
+                             v                     |
+                       Feature assembly            |
+                             |                     |
+                             v                     |
+                        Model scoring              |
+                             |                     |
+                             v                     |
+                  Multi-objective reranking        |
+                             |                     |
+                             v                     |
+                       Ranked feed response -------+
+                             |
+                             v
+                      User interactions
+               (feed_request, impression, click,
+                   save, hide) logged to events
+```
+
+### Component summary
+
+- **Ingestion layer**: fetches and normalizes content from public APIs and feeds.
+- **Storage layer**: stores normalized content and events in DuckDB; feature tables in Parquet.
+- **Feature layer**: builds item, user, and context features.
+- **Model layer**: trains a pointwise click-prediction model.
+- **Reranking layer**: improves feed quality using freshness and repetition penalties.
+- **Serving layer**: exposes ranking functionality through FastAPI.
+- **Demo layer**: Streamlit UI for feed interaction and inspection.
+
+---
+
+## 6) Repository Structure
+
+```text
+news-feed-ranking-system/
+│
+├── README.md
+├── README_DETAILED.txt
+├── requirements.txt
+├── pyproject.toml
+├── docker-compose.yml
+├── Makefile
+│
+├── configs/
+│   ├── config.yaml
+│   ├── sources.yaml
+│   ├── features.yaml
+│   └── model.yaml
+│
+├── data/
+│   ├── raw/
+│   ├── bronze/
+│   ├── silver/
+│   ├── gold/
+│   └── logs/
+│
+├── docs/
+│   ├── architecture.md
+│   ├── architecture_mermaid.md
+│   ├── data_dictionary.md
+│   ├── feature_store_design.md
+│   └── evaluation.md
+│
+├── models_artifacts/
+│   └── logistic_model.joblib
+│
+├── src/
+│   ├── ingestion/
+│   ├── storage/
+│   ├── events/
+│   ├── features/
+│   ├── models/
+│   ├── reranking/
+│   ├── api/
+│   ├── ui/
+│   └── utils/
+│
+├── check_data.py
+├── check_events.py
+└── check_training_data.py
+```
+
+---
+
+## 7) Data Sources
+
+The MVP uses free/public sources.
+
+### Current sources
+
+- **Hacker News API**
+- **RSS feeds** such as BBC World, TechCrunch, Ars Technica, VentureBeat
+
+### Why these sources were chosen
+
+- easy to access
+- free to use
+- sufficient variety for a feed-style ranking system
+- fast iteration without cloud dependencies
+
+### Unified content schema
+
+All sources are normalized into a common structure with fields such as:
+
+- `item_id`
+- `source`
+- `source_type`
+- `title`
+- `description`
+- `url`
+- `author`
+- `published_at`
+- `fetched_at`
+- `category`
+- `topic`
+- `language`
+- `content_length`
+
+This makes downstream feature engineering and model training much easier.
+
+---
+
+## 8) Data Model and Storage Layers
+
+### Raw layer
+
+Stores raw API/feed payloads for reproducibility.
+
+### Bronze layer
+
+Stores normalized content snapshots in Parquet.
+
+### Silver layer
+
+Stores cleaned analytical tables in DuckDB, including:
+
+- `content_items`
+- `events`
+
+### Gold layer
+
+Stores ML-ready outputs such as:
+
+- `item_features.parquet`
+- `user_features.parquet`
+- `context_features.parquet`
+- `training_dataset.parquet`
+
+### Why DuckDB + Parquet
+
+This combination provides:
+
+- simple local setup
+- analytical SQL support
+- reproducible pipelines
+- lightweight storage
+- no cloud spend
+
+It is a strong fit for a portfolio project that aims to stay realistic without overengineering.
+
+---
+
+## 9) Event Logging Design
+
+A ranking system is only as useful as the interaction data it collects.
+
+### Event types implemented
+
+- `feed_request`
+- `impression`
+- `click`
+- `save`
+- `hide`
+
+### Core event fields
+
+- `event_id`
+- `timestamp`
+- `user_id`
+- `session_id`
+- `event_type`
+- `item_id`
+- `rank_position`
+- `model_version`
+- `score`
+- `policy_name`
+- `metadata`
+
+### Why impressions are critical
+
+A feed ranking dataset cannot be built from clicks alone. We must know:
 
-The goal is to build a realistic, end-to-end ML system — not just a model.
+- what the user **saw**
+- what the user **clicked**
+- what the user **ignored**
 
+This project therefore treats impressions as the base population and assigns click labels on top of them.
 
-2. WHY THIS PROJECT
--------------------
+That is a core recommender-systems concept and one of the most important pieces of the pipeline.
 
-Most student projects are limited to:
-- dashboards
-- simple classification models
+---
 
-This project demonstrates:
+## 10) Feature Engineering
 
-- real-world ML system design
-- ranking systems (not just classification)
-- event-driven data pipelines
-- feature engineering (user, item, context)
-- offline vs online ML thinking
-- product-aware ML decisions
-- end-to-end architecture
+The project builds three kinds of features.
 
-This makes it highly valuable for:
-- Data Science roles
-- Machine Learning Engineering roles
-- Recommender Systems roles
-- Data Engineering / ML Systems roles
+### A) Item features
 
+Examples:
 
-3. SYSTEM ARCHITECTURE
-----------------------
+- `age_hours`
+- `title_length`
+- `description_length`
+- `source`
+- `source_type`
+- `category`
+- `hour_published`
+- `weekday_published`
+- `is_hackernews`
+- `is_rss`
 
-High-level flow:
+These capture freshness, metadata, and content origin.
 
-Streamlit UI
-    ↓
-FastAPI Ranking Service
-    ↓
-Feature Layer (offline features)
-    ↓
-ML Model (Logistic Regression)
-    ↓
-Reranking Layer (freshness + diversity)
-    ↓
-Ranked Feed → UI
-    ↓
-User Interactions → Event Logging → DuckDB
+### B) User features
 
+Examples:
 
-4. TECH STACK
--------------
+- `recent_impression_count`
+- `recent_click_count`
+- `recent_save_count`
+- `recent_hide_count`
+- `preferred_source`
+- `preferred_category`
 
-Core:
-- Python 3.11
-- DuckDB (analytics DB)
-- Parquet (storage)
-- pandas
+These capture recent behavior and coarse user preferences.
 
-ML:
-- scikit-learn (Logistic Regression)
+### C) Context features
 
-Serving:
-- FastAPI
-- Uvicorn
+Examples:
 
-UI:
-- Streamlit
+- `hour_of_day`
+- `weekday`
+- `is_weekend`
 
-Other:
-- requests
-- feedparser
+These capture request-time conditions.
 
-Planned:
-- LightGBM
-- Redis
-- sentence-transformers
+### Derived match features
 
+The pipeline also creates useful interaction features such as:
 
-5. DATA INGESTION
------------------
+- `preferred_source_match`
+- `preferred_category_match`
 
-Sources:
-- Hacker News API
-- RSS feeds (BBC, TechCrunch, VentureBeat)
+These help the model learn whether a candidate aligns with recent user behavior.
 
-Steps:
-- fetch raw data
-- normalize schema
-- deduplicate
-- store in DuckDB
+---
 
-Output:
-content_items table
+## 11) Training Dataset Construction
 
+The training dataset is built from impression logs.
 
-6. EVENT LOGGING
-----------------
+### Positive examples
 
-Events tracked:
+An impression becomes a positive example if the same user clicked the same item in the same session.
 
-- feed_request
-- impression
-- click
-- save
-- hide
+### Negative examples
 
-Each event contains:
-- user_id
-- session_id
-- item_id
-- timestamp
-- rank_position
-- model_score (optional)
+An impression becomes a negative example if it was shown but not clicked.
 
-Why this matters:
-- builds ranking dataset
-- enables implicit feedback learning
+### Resulting dataset
 
+Each training row combines:
 
-7. FEATURE ENGINEERING
-----------------------
+- impression metadata
+- item features
+- user features
+- context features
+- label: `clicked`
 
-Item Features:
-- age_hours
-- title_length
-- description_length
-- source
-- category
-- publish hour/day
+This is a practical first step for pointwise ranking.
 
-User Features:
-- recent_impression_count
-- recent_click_count
-- recent_save_count
-- recent_hide_count
-- preferred_source
-- preferred_category
+### Why this framing is useful
 
-Context Features:
-- hour_of_day
-- weekday
-- is_weekend
+It is simple, explainable, and good enough to establish a baseline ranking pipeline before moving into more advanced learning-to-rank approaches.
 
-All features stored in Parquet (offline feature store).
+---
 
+## 12) Modeling Approach
 
-8. TRAINING DATASET
--------------------
+### Current baseline
 
-Built from:
+The first working model is a **Logistic Regression** classifier used as a pointwise ranker.
 
-Impressions → all shown items  
-Clicks → positive signals  
+### Why start with Logistic Regression
 
-Target:
-clicked = 1 if user clicked, else 0
+- fast to train
+- highly interpretable
+- stable baseline
+- easy to debug
+- good for validating the end-to-end system
 
-This creates a ranking dataset suitable for:
-- pointwise ranking models
+### Preprocessing pipeline
 
+The model pipeline includes:
 
-9. MODELING
------------
+- imputation for missing numeric values
+- one-hot encoding for categorical variables
+- Logistic Regression probability output
 
-Baseline Model:
-- Logistic Regression
+### Model output
 
-Pipeline:
-- numeric + categorical features
-- imputation
-- one-hot encoding
+For each candidate item, the model produces a `model_score`, interpreted as a click probability proxy.
 
-Output:
-- probability of click (model_score)
+### Current evaluation caveat
 
-Note:
-Dataset is small → results are for pipeline validation.
+The initial dataset is intentionally small. Therefore, offline results should be interpreted as **pipeline validation**, not final production-level performance.
 
+That is the honest and correct framing.
 
-10. RANKING PIPELINE
---------------------
+---
 
-Steps:
+## 13) Multi-Objective Re-Ranking
 
-1. Candidate generation (recent items)
-2. Feature construction (user + item + context)
-3. Model scoring
-4. Multi-objective reranking
-5. Return ranked items
+Model score alone is not enough for a good feed.
 
+If we sort only by predicted click probability, the feed may become:
 
-11. MULTI-OBJECTIVE RERANKING
------------------------------
+- too repetitive
+- too concentrated on one source
+- less fresh
+- less diverse
 
-Final score:
+### Current reranking formula
 
-final_score = model_score + freshness_bonus - diversity_penalty - source_penalty
+```text
+final_score = model_score + freshness_bonus - category_repeat_penalty - source_repeat_penalty
+```
 
-Components:
+### Implemented reranking objectives
 
-Freshness:
-- newer items get higher score
+#### Freshness bonus
 
-Diversity:
-- penalize repeated categories
+Newer items receive an additional score boost.
 
-Source repetition:
-- penalize repeated sources
+#### Category repetition penalty
 
-Why this matters:
-- prevents repetitive feeds
-- improves user experience
+Items are penalized if too many already-selected items share the same category.
 
+#### Source repetition penalty
 
-12. API DESIGN
---------------
+Items are penalized if the feed over-concentrates on the same source.
 
-Endpoints:
+### Why this matters
 
-GET /health  
-→ health check
+This layer shows product understanding beyond pure CTR optimization. It makes the project substantially stronger in interviews because it demonstrates awareness of feed quality, not just model quality.
 
-POST /rank-feed  
-→ returns ranked feed
+---
 
-Input:
-- user_id
-- session_id
-- limit
+## 14) Serving Architecture
 
-Output:
+### FastAPI endpoints
+
+#### `GET /health`
+Basic health check.
+
+#### `POST /rank-feed`
+Accepts:
+
+- `user_id`
+- `session_id`
+- `limit`
+
+Returns:
+
 - ranked items
-- model_score
-- freshness_bonus
-- final_rank
+- model scores
+- freshness bonus
+- final rank
 
+### Ranking flow
 
-13. UI (STREAMLIT)
-------------------
+1. Load recent candidate items.
+2. Build user-aware scoring frame.
+3. Score candidates with the trained model.
+4. Apply reranking.
+5. Return top ranked items.
 
-Features:
+This design cleanly separates scoring logic from the UI.
 
-- user selection
-- session tracking
-- ranked feed display
-- model score visualization
-- interaction buttons:
-  - save
-  - hide
-  - click
+---
 
-The UI calls the FastAPI backend.
+## 15) Streamlit Demo UI
 
+The frontend is built with Streamlit to make the system easy to demo.
 
-14. HOW TO RUN
---------------
+### Current UI capabilities
 
-Step 1 — install dependencies
+- choose user identity
+- start new session
+- request ranked feed from FastAPI
+- view model score and reranking metadata
+- click Save / Hide / Open
+- automatically log impressions
 
+### Why Streamlit was used
+
+- fast to build
+- recruiter/demo friendly
+- easy local iteration
+- makes the project much easier to understand visually
+
+---
+
+## 16) How to Run the Project
+
+### 1. Create and activate virtual environment
+
+Windows PowerShell example:
+
+```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 2. Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
+### 3. Run ingestion
 
-Step 2 — run ingestion
-
+```bash
 python -m src.ingestion.hn_ingest
 python -m src.ingestion.rss_ingest
+```
 
+### 4. Verify content tables
 
-Step 3 — build features
+```bash
+python check_data.py
+```
 
+### 5. Interact with UI to generate events (optional early step)
+
+```bash
+streamlit run src/ui/streamlit_app.py
+```
+
+### 6. Build features
+
+```bash
 python -m src.features.item_features
 python -m src.features.user_features
 python -m src.features.context_features
 python -m src.features.dataset_builder
+```
 
+### 7. Verify training data
 
-Step 4 — train model
+```bash
+python check_training_data.py
+```
 
+### 8. Train the baseline model
+
+```bash
 python -m src.models.train
+```
 
+### 9. Start FastAPI service
 
-Step 5 — start API
-
+```bash
+$env:PYTHONPATH="."
 uvicorn src.api.main:app --reload --port 8000
+```
 
+### 10. Start Streamlit UI connected to API
 
-Step 6 — start UI
+In a second terminal:
 
+```bash
+.venv\Scripts\Activate.ps1
+$env:PYTHONPATH="."
 streamlit run src/ui/streamlit_app.py
+```
 
+### 11. Verify event logging
 
-15. KEY DESIGN DECISIONS
-------------------------
+```bash
+python check_events.py
+```
 
-Why DuckDB:
-- lightweight
-- fast
-- no infrastructure needed
+---
 
-Why Logistic Regression:
-- simple baseline
-- interpretable
+## 17) Example End-to-End Workflow
 
-Why reranking layer:
-- CTR-only ranking is not enough
-- improves diversity and freshness
+A typical local workflow looks like this:
 
-Why Streamlit + FastAPI:
-- separates UI and serving
-- mimics real-world architecture
+1. Ingest fresh public content.
+2. Launch the API.
+3. Launch the Streamlit app.
+4. Request a feed for a given user.
+5. The API loads candidates and scores them.
+6. Reranking adjusts the final ordering.
+7. The user sees the ranked feed.
+8. Feed requests, impressions, clicks, saves, and hides are logged.
+9. Feature tables and training data are rebuilt.
+10. The baseline model is retrained.
 
+This closes the ranking loop in a production-inspired way.
 
-16. LIMITATIONS
----------------
+---
 
-- small dataset
-- no real users at scale
-- no online A/B testing
-- no strict point-in-time features
-- simple model
+## 18) Current Results
 
+The project successfully demonstrates:
 
-17. FUTURE IMPROVEMENTS
------------------------
+- real ingestion from public sources
+- clean content normalization
+- interaction logging
+- feature table generation
+- training dataset creation
+- baseline model training
+- API-based ranking
+- reranked feed delivery in the UI
 
-- LightGBM / XGBoost
-- embeddings (sentence-transformers)
-- Redis online feature store
-- counterfactual evaluation (IPS, DR)
-- bandit-based ranking
-- larger dataset / simulator
+Initial offline model results on the small working dataset are mainly useful as proof that the pipeline works end-to-end.
 
+That is the right way to interpret them at this stage.
 
-18. RESUME BULLET
------------------
+---
 
-Built a production-inspired personalized news feed ranking system using Python, DuckDB, FastAPI, and Streamlit with real-time content ingestion, event logging, feature engineering, ML-based ranking, and multi-objective reranking.
+## 19) Design Decisions and Tradeoffs
 
+### Why local-first?
 
-19. KEY LEARNINGS
------------------
+The project is designed to be:
 
-- ranking systems differ from classification
-- importance of impression vs click logging
-- feature consistency is critical
-- product tradeoffs matter
-- simplicity beats overengineering
+- free or nearly free
+- easy to run locally
+- realistic enough for interviews
+- finishable without cloud complexity
+
+### Why not start with deep learning?
+
+Because the goal of the MVP is to prove the full system loop first:
+
+- ingestion
+- events
+- features
+- labels
+- model
+- serving
+- reranking
+
+A simpler baseline was the right engineering decision.
+
+### Why not start with Kafka / feature platforms / orchestration?
+
+Because that would overcomplicate the MVP. The project intentionally prefers:
+
+- realistic architecture principles
+- manageable implementation scope
+- strong explanation value
+
+This is a portfolio project optimized for signal, not unnecessary complexity.
+
+---
+
+## 20) Limitations
+
+The current MVP has several honest limitations:
+
+- small interaction dataset
+- limited number of users
+- baseline model only
+- coarse user preference signals
+- no embeddings yet
+- no Redis online feature store yet
+- user features are not yet fully point-in-time correct
+- no online experimentation or A/B testing
+- no full off-policy evaluation yet
+
+These are all acceptable for a first strong version.
+
+---
+
+## 21) Future Improvements
+
+Planned next steps include:
+
+### Modeling
+- LightGBM / XGBoost comparison
+- richer ranking metrics
+- better calibration checks
+
+### Personalization
+- text embeddings with sentence-transformers
+- user embedding centroid from clicked content
+- better content affinity modeling
+
+### Feature system
+- point-in-time correct joins
+- Redis online feature materialization
+- stricter offline/online consistency checks
+
+### Evaluation
+- NDCG@k
+- Recall@k
+- category/source diversity metrics
+- counterfactual evaluation with IPS / SNIPS / DR
+
+### Data generation
+- lightweight simulator for larger-scale interaction data
+
+### Product/system improvements
+- exploration bucket
+- debug endpoints
+- monitoring dashboards
+- policy comparison views
+
+---
+
+## 22) Resume / Portfolio Positioning
+
+### One-line project description
+
+A production-inspired personalized news feed ranking system with real content ingestion, event logging, feature engineering, baseline ranking, multi-objective reranking, FastAPI serving, and Streamlit demo UI.
+
+### Resume bullet example
+
+Built a production-inspired personalized news feed ranking system using Python, DuckDB, FastAPI, and Streamlit with public-content ingestion, impression/click logging, user-item-context feature engineering, baseline ML ranking, and freshness/diversity-aware reranking.
+
+### Honest positioning language
+
+Use:
+
+- production-inspired
+- end-to-end
+- lightweight feature store design
+- local-first
+- personalized ranking
+- reranking for freshness and diversity
+
+Do **not** claim:
+
+- large-scale production deployment
+- enterprise real-time infrastructure
+- millions of real users
+
+---
+
+## 23) Interview Talking Points
+
+### What problem does this project solve?
+
+It solves the problem of deciding which content items to show a user and in what order, while balancing engagement with freshness and variety.
+
+### Why is this more than a classification project?
+
+Because the system includes:
+
+- candidate generation
+- impression logging
+- feature construction
+- scoring
+- reranking
+- feed serving
+- feedback loop creation
+
+### Why are impressions important?
+
+Because clicks alone are insufficient. A ranking dataset needs to know which items were shown but ignored.
+
+### Why use reranking?
+
+Because pure click optimization often creates repetitive feeds. Freshness and diversity improve feed quality.
+
+### Why DuckDB + Parquet?
+
+Because they provide realistic storage and analytics patterns without cloud cost or infrastructure overhead.
+
+### What would you improve next?
+
+I would improve feature correctness, expand the interaction dataset, compare stronger models such as LightGBM, and add embedding-based personalization plus counterfactual evaluation.
+
+---
+
+## 24) License / Usage Notes
+
+This project is intended for educational, portfolio, and interview use.
+
+Content is sourced from public APIs/feeds and should be handled according to the terms of the underlying providers.
+
+---
+
+## Final Note
+
+This project was deliberately scoped to show strong ML systems thinking while remaining buildable and explainable. Its main strength is not any one model, but the fact that it demonstrates the full ranking lifecycle in a coherent, honest, and interview-ready way.
