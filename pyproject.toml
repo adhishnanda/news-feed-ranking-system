@@ -1,0 +1,9 @@
+[project]
+name = "news-feed-ranking-system"
+version = "0.1.0"
+description = "Production-inspired personalized news feed ranking system"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

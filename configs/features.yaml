@@ -1,0 +1,41 @@
+item_features:
+  - age_hours
+  - title_length
+  - source
+  - category
+  - hour_published
+  - weekday_published
+  - recent_popularity
+  - global_ctr
+
+user_features:
+  - recent_click_count_24h
+  - recent_impression_count_24h
+  - avg_dwell_time
+  - preferred_source_last_7d
+  - preferred_category_last_7d
+
+context_features:
+  - hour_of_day
+  - weekday
+  - session_depthitem_features:
+  - age_hours
+  - title_length
+  - source
+  - category
+  - hour_published
+  - weekday_published
+  - recent_popularity
+  - global_ctr
+
+user_features:
+  - recent_click_count_24h
+  - recent_impression_count_24h
+  - avg_dwell_time
+  - preferred_source_last_7d
+  - preferred_category_last_7d
+
+context_features:
+  - hour_of_day
+  - weekday
+  - session_depth

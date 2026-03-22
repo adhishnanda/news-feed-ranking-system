@@ -1,0 +1,33 @@
+CONTENT_COLUMNS = [
+    "item_id",
+    "source",
+    "source_type",
+    "title",
+    "description",
+    "full_text",
+    "url",
+    "author",
+    "published_at",
+    "fetched_at",
+    "category",
+    "topic",
+    "language",
+    "content_length",
+]
+
+EVENT_COLUMNS = [
+    "event_id",
+    "timestamp",
+    "user_id",
+    "session_id",
+    "event_type",
+    "item_id",
+    "rank_position",
+    "model_version",
+    "score",
+    "policy_name",
+    "propensity",
+    "dwell_time",
+    "device_type",
+    "metadata",
+]

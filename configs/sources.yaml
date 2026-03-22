@@ -1,0 +1,24 @@
+rss_feeds:
+  - name: techcrunch
+    url: https://techcrunch.com/feed/
+    category: tech
+  - name: ars_technica
+    url: https://feeds.arstechnica.com/arstechnica/index
+    category: tech
+  - name: venturebeat
+    url: https://venturebeat.com/feed/
+    category: tech
+  - name: bbc_world
+    url: http://feeds.bbci.co.uk/news/world/rss.xml
+    category: world
+
+guardian:
+  enabled: true
+  api_key_env: GUARDIAN_API_KEY
+  section: technology
+
+hackernews:
+  enabled: true
+  topstories_endpoint: https://hacker-news.firebaseio.com/v0/topstories.json
+  item_endpoint_template: https://hacker-news.firebaseio.com/v0/item/{item_id}.json
+  max_items: 100
