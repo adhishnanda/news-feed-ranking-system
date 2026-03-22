@@ -27,9 +27,7 @@ A production-inspired, end-to-end personalized news feed ranking system built wi
 19. Design Decisions and Tradeoffs  
 20. Limitations  
 21. Future Improvements  
-22. Resume / Portfolio Positioning  
-23. Interview Talking Points  
-24. License / Usage Notes
+22. License / Usage Notes
 
 ---
 
@@ -452,6 +450,12 @@ It is simple, explainable, and good enough to establish a baseline ranking pipel
 
 The first working model is a **Logistic Regression** classifier used as a pointwise ranker.
 
+### Modeling
+- Baseline: Logistic Regression
+- Upgrade: LightGBM for stronger non-linear modeling on mixed tabular ranking features
+- Saved both models and compared offline metrics
+- API can serve the configured default model
+
 ### Why start with Logistic Regression
 
 - fast to train
@@ -475,8 +479,6 @@ For each candidate item, the model produces a `model_score`, interpreted as a cl
 ### Current evaluation caveat
 
 The initial dataset is intentionally small. Therefore, offline results should be interpreted as **pipeline validation**, not final production-level performance.
-
-That is the honest and correct framing.
 
 ---
 
@@ -783,72 +785,7 @@ Planned next steps include:
 
 ---
 
-## 22) Resume / Portfolio Positioning
-
-### One-line project description
-
-A production-inspired personalized news feed ranking system with real content ingestion, event logging, feature engineering, baseline ranking, multi-objective reranking, FastAPI serving, and Streamlit demo UI.
-
-### Resume bullet example
-
-Built a production-inspired personalized news feed ranking system using Python, DuckDB, FastAPI, and Streamlit with public-content ingestion, impression/click logging, user-item-context feature engineering, baseline ML ranking, and freshness/diversity-aware reranking.
-
-### Honest positioning language
-
-Use:
-
-- production-inspired
-- end-to-end
-- lightweight feature store design
-- local-first
-- personalized ranking
-- reranking for freshness and diversity
-
-Do **not** claim:
-
-- large-scale production deployment
-- enterprise real-time infrastructure
-- millions of real users
-
----
-
-## 23) Interview Talking Points
-
-### What problem does this project solve?
-
-It solves the problem of deciding which content items to show a user and in what order, while balancing engagement with freshness and variety.
-
-### Why is this more than a classification project?
-
-Because the system includes:
-
-- candidate generation
-- impression logging
-- feature construction
-- scoring
-- reranking
-- feed serving
-- feedback loop creation
-
-### Why are impressions important?
-
-Because clicks alone are insufficient. A ranking dataset needs to know which items were shown but ignored.
-
-### Why use reranking?
-
-Because pure click optimization often creates repetitive feeds. Freshness and diversity improve feed quality.
-
-### Why DuckDB + Parquet?
-
-Because they provide realistic storage and analytics patterns without cloud cost or infrastructure overhead.
-
-### What would you improve next?
-
-I would improve feature correctness, expand the interaction dataset, compare stronger models such as LightGBM, and add embedding-based personalization plus counterfactual evaluation.
-
----
-
-## 24) License / Usage Notes
+## 22) License / Usage Notes
 
 This project is intended for educational, portfolio, and interview use.
 

@@ -13,7 +13,7 @@ class RankingService:
     def __init__(self):
         self.cfg = load_yaml("configs/config.yaml")
         self.db = DuckDBClient(self.cfg["paths"]["duckdb"])
-        self.model = load_model()
+        self.model, self.model_name = load_model()
 
         self.item_features = read_parquet(f"{self.cfg['paths']['gold_dir']}/item_features.parquet")
         self.user_features = read_parquet(f"{self.cfg['paths']['gold_dir']}/user_features.parquet")
@@ -143,6 +143,6 @@ class RankingService:
         return {
             "user_id": user_id,
             "session_id": session_id,
-            "model_version": "logistic_v1",
+            "model_version": self.model_name,
             "items": items,
         }
