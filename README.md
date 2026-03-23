@@ -1,6 +1,20 @@
 # Personalized News Feed Ranking System
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/API-FastAPI-green)
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-red)
+![Model](https://img.shields.io/badge/Model-LightGBM-orange)
+![Database](https://img.shields.io/badge/DB-DuckDB-yellow)
 
 A production-inspired, end-to-end personalized news feed ranking system built with a local-first stack. The project ingests real public content, logs user interactions, engineers user/item/context features, trains a baseline click-prediction ranker, applies multi-objective reranking, and serves a personalized feed through a FastAPI backend and Streamlit frontend.
+
+## Key Highlights
+
+- End-to-end ML system (not just a model)
+- Real content ingestion (Hacker News + RSS)
+- Event-driven training dataset (impressions + clicks)
+- Logistic Regression + LightGBM ranking models
+- Multi-objective reranking (freshness + diversity)
+- FastAPI serving + Streamlit UI
 
 ---
 
@@ -127,53 +141,38 @@ To answer that, it performs the following steps:
 
 ### High-level flow
 
-```text
-Public content sources
-(Hacker News API, RSS feeds)
-        |
-        v
-Ingestion + normalization scripts
-        |
-        v
-DuckDB + Parquet storage
-(content_items, events, feature tables)
-        |
-        +-----------------------------+
-        |                             |
-        v                             v
-Feature engineering pipelines      Streamlit UI
-(item/user/context features)          |
-        |                             |
-        v                             |
-Training dataset construction         |
-        |                             |
-        v                             |
-Baseline ranking model training       |
-        |                             |
-        v                             |
-Saved model artifact                  |
-        |                             |
-        +------------> FastAPI ranking service <---+
-                             |                     |
-                             v                     |
-                    Candidate generation           |
-                             |                     |
-                             v                     |
-                       Feature assembly            |
-                             |                     |
-                             v                     |
-                        Model scoring              |
-                             |                     |
-                             v                     |
-                  Multi-objective reranking        |
-                             |                     |
-                             v                     |
-                       Ranked feed response -------+
-                             |
-                             v
-                      User interactions
-               (feed_request, impression, click,
-                   save, hide) logged to events
+```mermaid
+flowchart TD
+
+%% Sources → Ingestion → Storage
+A[Public Content Sources<br/>Hacker News + RSS]
+B[Ingestion & Normalization]
+C[(DuckDB + Parquet<br/>content_items, events)]
+
+A --> B --> C
+
+%% Feature + Training pipeline
+C --> D[Feature Engineering<br/>Item / User / Context]
+D --> E[Training Dataset]
+E --> F[Model Training<br/>Logistic + LightGBM]
+F --> G[Saved Model Artifact]
+
+%% API Serving
+G --> H[FastAPI Ranking Service]
+
+H --> I[Candidate Generation]
+I --> J[Feature Assembly]
+J --> K[Model Scoring]
+K --> L[Reranking<br/>Freshness + Diversity]
+L --> M[Ranked Feed]
+
+%% UI
+N[Streamlit UI] --> H
+M --> N
+
+%% Events
+N --> O[User Interactions<br/>click, save, hide]
+O --> C
 ```
 
 ### Component summary
@@ -194,7 +193,6 @@ Saved model artifact                  |
 news-feed-ranking-system/
 │
 ├── README.md
-├── README_DETAILED.txt
 ├── requirements.txt
 ├── pyproject.toml
 ├── docker-compose.yml
@@ -214,6 +212,7 @@ news-feed-ranking-system/
 │   └── logs/
 │
 ├── docs/
+│   ├── screenshots/
 │   ├── architecture.md
 │   ├── architecture_mermaid.md
 │   ├── data_dictionary.md
