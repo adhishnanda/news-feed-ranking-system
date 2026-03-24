@@ -572,6 +572,14 @@ The frontend is built with Streamlit to make the system easy to demo.
 - easy local iteration
 - makes the project much easier to understand visually
 
+### Demo Screenshots
+
+#### Streamlit Feed
+![Feed](docs/screenshots/feed.png)
+
+#### API Response
+![API](docs/screenshots/api.png)
+
 ---
 
 ## 16) How to Run the Project
