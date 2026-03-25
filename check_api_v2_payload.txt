@@ -1,0 +1,8 @@
+POST http://127.0.0.1:8000/rank-feed-v2
+Content-Type: application/json
+
+{
+  "user_id": "user_1",
+  "session_id": "session_v2_demo_001",
+  "limit": 5
+}

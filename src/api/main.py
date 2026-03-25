@@ -1,10 +1,12 @@
 from __future__ import annotations
+from src.api.rank_feed_v2 import router as rank_feed_v2_router
 from fastapi import FastAPI
 
 from src.api.schemas import RankFeedRequest, RankFeedResponse
 from src.api.ranking_service import RankingService
 
 app = FastAPI(title="News Feed Ranking API")
+app.include_router(rank_feed_v2_router)
 ranking_service = RankingService()
 
 
