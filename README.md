@@ -56,32 +56,57 @@ This project:
 ## 🏗️ System Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
 
-A[Content Sources<br/>HN + RSS] --> B[Ingestion]
-B --> C[(Storage<br/>DuckDB + Parquet)]
+%% --------------------
+%% DATA LAYER
+%% --------------------
+A[Content Sources<br/>HN + RSS]
+B[Ingestion]
+C[(Storage<br/>DuckDB + Parquet)]
 
-C --> D[Feature Engineering]
-D --> E[Training Dataset]
-E --> F[Model Training]
-F --> G[Model Artifact]
+A --> B --> C
 
-C --> H[Simulation Engine]
+%% --------------------
+%% TRAINING PIPELINE
+%% --------------------
+D[Feature Engineering]
+E[Training Dataset]
+F[Model Training]
+G[Model Artifact]
 
-G --> I[FastAPI API]
+C --> D --> E --> F --> G
 
-I --> J[Candidate Retrieval]
-J --> K[Feature Assembly]
-K --> L[Redis Feature Store]
-L --> M[Ranking Model]
-M --> N[Reranking Layer]
-N --> O[Final Feed]
+%% --------------------
+%% SIMULATION
+%% --------------------
+H[Simulation Engine]
+C --> H
 
-P[Streamlit UI] --> I
+%% --------------------
+%% SERVING PIPELINE
+%% --------------------
+I[FastAPI API]
+
+J[Candidate Retrieval]
+K[Feature Assembly]
+L[Redis Feature Store]
+M[Ranking Model]
+N[Reranking Layer]
+O[Final Feed]
+
+G --> I
+I --> J --> K --> L --> M --> N --> O
+
+%% --------------------
+%% UI + FEEDBACK LOOP
+%% --------------------
+P[Streamlit UI]
+Q[User Events]
+
+P --> I
 O --> P
-
-P --> Q[User Events]
-Q --> C
+P --> Q --> C
 ````
 
 ---
@@ -310,12 +335,11 @@ User → Feed → Interaction → Events → Features → Training → Model →
 ## 🧠 Final Takeaway
 
 Not a notebook.
+
 Not a toy project.
 
 👉 A **production-inspired recommender system**.
 
 ---
 
-```
-```
 
