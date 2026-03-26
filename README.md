@@ -325,6 +325,7 @@ User → Feed → Interaction → Events → Features → Training → Model →
 ### API Response
 
 ### Architecture
+![Architecture](docs/images/architecture.png)
 
 ### Metrics
 
