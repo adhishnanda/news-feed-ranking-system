@@ -1,6 +1,5 @@
 ![Banner](docs/screenshots/banner.webp)
 
-````markdown
 # 🚀 Personalized News Feed Ranking System (V2)
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
