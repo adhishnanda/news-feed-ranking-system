@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python *)",
+      "Bash(python -m py_compile src/api/main.py src/api/rank_feed_v2.py src/models/train_v2.py src/evaluation/ranking_metrics_v2.py)",
+      "Bash(python *)",
+      "Bash(.venv/Scripts/pip show *)"
+    ]
+  }
+}

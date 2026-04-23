@@ -58,7 +58,10 @@ def retrieve_candidates_for_user(
             standardize_candidate_frame(get_source_candidates(df, prefs["preferred_source"], top_k_each))
         )
 
-    all_candidates = pd.concat(candidate_frames, ignore_index=True)
+    non_empty = [f for f in candidate_frames if not f.empty]
+    if not non_empty:
+        return pd.DataFrame()
+    all_candidates = pd.concat(non_empty, ignore_index=True)
 
     if all_candidates.empty:
         return all_candidates
