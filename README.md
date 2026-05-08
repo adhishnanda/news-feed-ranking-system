@@ -696,6 +696,15 @@ The frontend is built with Streamlit and connects to the FastAPI backend.
 #### API Response
 ![API](docs/screenshots/api.png)
 
+#### Redis Running
+![Redis](docs/screenshots/Redis_Running.png)
+
+#### Docker Dashboard
+![Dashboard](docs/screenshots/Docker_Dashboard.png)
+
+#### Docker Running
+![Docker](docs/screenshots/Docker_Running.png)
+
 ---
 
 ## 17) Test Suite
